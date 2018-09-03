@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 )
 
@@ -26,7 +27,18 @@ func main() {
 	dictionary := flag.String("f", "nil", "A single dictionary file with passwords to test")
 	dictionaries := flag.String("d", "nil", "A directory with dictionary files")
 
+	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to `file`")
+	memprofile := flag.String("memprofile", "", "write memory profile to `file`")
+
 	flag.Parse()
+
+	cpuProf, err := os.Create(*cpuprofile)
+	if *cpuprofile != "" {
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(cpuProf)
+	}
 
 	if flag.NFlag() == 0 {
 		printUsage()
@@ -93,6 +105,21 @@ func main() {
 			}
 		}
 	}
+
+	if *memprofile != "" {
+		mem, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(mem); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		mem.Close()
+	}
+
+	pprof.StopCPUProfile()
+	cpuProf.Close()
 
 	os.Exit(0)
 }
