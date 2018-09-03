@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -35,25 +36,63 @@ func main() {
 		panic("A hash is required to use crackr")
 	}
 
+	if *hash != "nil" && *hashes != "nil" {
+		panic("Only one type of hash can be used!")
+	}
+
 	if *dictionary == "nil" && *dictionaries == "nil" {
 		panic("A dictionary is required to use crackr")
 	}
 
-	lowerCaseHash := strings.ToLower(*hash)
-
-	var passwords = []string{}
-
-	if *dictionary != "nil" {
-		passwordDict, err := ioutil.ReadFile(*dictionary)
-		if err != nil {
-			fmt.Print(err)
-		}
-
-		passwordString := string(passwordDict) // convert content to a 'string'
-		passwords = strings.Split(passwordString, "\n")
+	if *dictionary != "nil" && *dictionaries != "nil" {
+		panic("Only one type of dictionary can be used!")
 	}
 
-	checkPassword(passwords, lowerCaseHash)
+	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
+		if *hash != "nil" {
+			lowerCaseHash := strings.ToLower(*hash)
+			passwords := readAndSplitFile(dictionary)
+			checkPassword(passwords, lowerCaseHash)
+		}
+
+		if *hashes != "nil" {
+			hashedPasswords := readAndSplitFile(hashes)
+			for _, password := range hashedPasswords {
+				lowerCaseHash := strings.ToLower(password)
+				passwords := readAndSplitFile(dictionary)
+				checkPassword(passwords, lowerCaseHash)
+			}
+
+		}
+	}
+
+	if *dictionaries != "nil" && (*hash != "nil" || *hashes != "nil") {
+		passwordDicts, err := ioutil.ReadDir(*dictionaries)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, dict := range passwordDicts {
+			fileName := dict.Name()
+			filePath := *dictionaries + "/" + fileName
+			passwords := readAndSplitFile(&filePath)
+			if *hash != "nil" {
+				lowerCaseHash := strings.ToLower(*hash)
+				checkPassword(passwords, lowerCaseHash)
+			}
+
+			if *hashes != "nil" {
+				hashedPasswords := readAndSplitFile(hashes)
+				for _, password := range hashedPasswords {
+					lowerCaseHash := strings.ToLower(password)
+					if err != nil {
+						fmt.Println(err)
+					}
+					checkPassword(passwords, lowerCaseHash)
+				}
+			}
+		}
+	}
 
 	os.Exit(0)
 }

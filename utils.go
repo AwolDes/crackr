@@ -7,10 +7,21 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
-	"os"
+	"io/ioutil"
+	"strings"
 
 	"golang.org/x/crypto/sha3"
 )
+
+func readAndSplitFile(file *string) []string {
+	fileBytes, err := ioutil.ReadFile(*file)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileString := string(fileBytes)
+	stringArray := strings.Split(fileString, "\n")
+	return stringArray
+}
 
 func getHash(hashType string, plaintext string) string {
 	switch hashingAlgo := hashType; hashingAlgo {
@@ -58,7 +69,6 @@ func checkPassword(passwords []string, hash string) {
 			if hashedPassword == hash {
 				fmt.Println("Match!")
 				fmt.Println(password, hashAlgorithim)
-				os.Exit(0)
 			}
 			attempts++
 		}
