@@ -7,6 +7,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"io/ioutil"
 	"strings"
 
@@ -23,54 +24,74 @@ func readAndSplitFile(file *string) []string {
 	return stringArray
 }
 
+func hashText(hasher hash.Hash, plaintext string) string {
+	hasher.Write([]byte(plaintext))
+	cipherText := hex.EncodeToString(hasher.Sum(nil))
+	return cipherText
+}
+
 func getHash(hashType string, plaintext string) string {
 	switch hashingAlgo := hashType; hashingAlgo {
 	case "sha1":
 		hasher := sha1.New()
-		hasher.Write([]byte(plaintext))
-		sha1 := hex.EncodeToString(hasher.Sum(nil))
+		sha1 := hashText(hasher, plaintext)
 		return sha1
 	case "md5":
 		hasher := md5.New()
-		hasher.Write([]byte(plaintext))
-		md5 := hex.EncodeToString(hasher.Sum(nil))
+		md5 := hashText(hasher, plaintext)
 		return md5
 	case "sha256":
 		hasher := sha256.New()
-		hasher.Write([]byte(plaintext))
-		sha256 := hex.EncodeToString(hasher.Sum(nil))
+		sha256 := hashText(hasher, plaintext)
 		return sha256
 	case "sha512":
 		hasher := sha512.New()
-		hasher.Write([]byte(plaintext))
-		sha512 := hex.EncodeToString(hasher.Sum(nil))
+		sha512 := hashText(hasher, plaintext)
 		return sha512
 	case "sha3_256":
 		hasher := sha3.New256()
-		hasher.Write([]byte(plaintext))
-		sha3_256 := hex.EncodeToString(hasher.Sum(nil))
+		sha3_256 := hashText(hasher, plaintext)
 		return sha3_256
 	case "sha3_512":
 		hasher := sha3.New512()
-		hasher.Write([]byte(plaintext))
-		sha3_512 := hex.EncodeToString(hasher.Sum(nil))
+		sha3_512 := hashText(hasher, plaintext)
 		return sha3_512
 	default:
 		panic("Hash type not supported!")
 	}
 }
 
-func checkPassword(passwords []string, hash string) {
+func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
+	for _, foundPassword := range *foundPasswords {
+		if foundPassword == hashedPassword {
+			return true
+		}
+	}
+	return false
+}
+
+func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
+	// fmt.Println(foundPasswords)
 	for _, password := range passwords {
-		attempts := 0
 		hashAlgorithims := []string{"sha1", "md5", "sha256", "sha512", "sha3_256", "sha3_512"}
 		for _, hashAlgorithim := range hashAlgorithims {
 			hashedPassword := getHash(hashAlgorithim, password)
-			if hashedPassword == hash {
-				fmt.Println("Match!")
-				fmt.Println(password, hashAlgorithim)
+			if len(*foundPasswords) > 0 {
+				if !checkFoundPasswords(foundPasswords, hashedPassword) {
+					if hashedPassword == hash {
+						fmt.Println("Matched!")
+						fmt.Println(password, hashAlgorithim)
+						*foundPasswords = append(*foundPasswords, hashedPassword)
+					}
+				}
+			} else {
+				if hashedPassword == hash {
+					fmt.Println("Match!")
+					fmt.Println(password, hashAlgorithim)
+					*foundPasswords = append(*foundPasswords, hashedPassword)
+				}
 			}
-			attempts++
+
 		}
 	}
 }

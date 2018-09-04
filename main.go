@@ -60,11 +60,13 @@ func main() {
 		panic("Only one type of dictionary can be used!")
 	}
 
+	var foundPasswords []string
+
 	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
 		if *hash != "nil" {
 			lowerCaseHash := strings.ToLower(*hash)
 			passwords := readAndSplitFile(dictionary)
-			checkPassword(passwords, lowerCaseHash)
+			checkPassword(passwords, &foundPasswords, lowerCaseHash)
 		}
 
 		if *hashes != "nil" {
@@ -72,7 +74,7 @@ func main() {
 			for _, password := range hashedPasswords {
 				lowerCaseHash := strings.ToLower(password)
 				passwords := readAndSplitFile(dictionary)
-				checkPassword(passwords, lowerCaseHash)
+				checkPassword(passwords, &foundPasswords, lowerCaseHash)
 			}
 
 		}
@@ -90,7 +92,7 @@ func main() {
 			passwords := readAndSplitFile(&filePath)
 			if *hash != "nil" {
 				lowerCaseHash := strings.ToLower(*hash)
-				checkPassword(passwords, lowerCaseHash)
+				checkPassword(passwords, &foundPasswords, lowerCaseHash)
 			}
 
 			if *hashes != "nil" {
@@ -100,7 +102,7 @@ func main() {
 					if err != nil {
 						fmt.Println(err)
 					}
-					checkPassword(passwords, lowerCaseHash)
+					checkPassword(passwords, &foundPasswords, lowerCaseHash)
 				}
 			}
 		}
@@ -118,8 +120,10 @@ func main() {
 		mem.Close()
 	}
 
-	pprof.StopCPUProfile()
-	cpuProf.Close()
+	if *cpuprofile != "" {
+		pprof.StopCPUProfile()
+		cpuProf.Close()
+	}
 
 	os.Exit(0)
 }
