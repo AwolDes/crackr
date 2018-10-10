@@ -13,4 +13,6 @@
 
 *.csv
 
+*.out
+
 dictionaries/*
