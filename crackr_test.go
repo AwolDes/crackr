@@ -2,7 +2,8 @@ package main
 
 import "testing"
 
-// run using go test -bench=. -benchmem -count 3 -v -cpuprofile cpu.out -memprofile mem.mprof
+// run using
+// go test -bench=. -benchmem -count 5 -v -cpuprofile cpu.out
 // profile using go tool pprof cpu.out
 // useful func
 // top5
