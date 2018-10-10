@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"fmt"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -60,16 +59,16 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 				// check if a password has already been found
 				if !checkFoundPasswords(foundPasswords, hashedPassword) {
 					if hashedPassword == hash {
-						fmt.Println("Matched!")
-						fmt.Println(password, hashAlgorithim)
+						// fmt.Println("Matched!")
+						// fmt.Println(password, hashAlgorithim)
 						writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 						*foundPasswords = append(*foundPasswords, hashedPassword)
 					}
 				}
 			} else {
 				if hashedPassword == hash {
-					fmt.Println("Match!")
-					fmt.Println(password, hashAlgorithim)
+					// fmt.Println("Match!")
+					// fmt.Println(password, hashAlgorithim)
 					writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 					*foundPasswords = append(*foundPasswords, hashedPassword)
 				}
