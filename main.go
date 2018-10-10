@@ -4,10 +4,8 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
-	"strings"
 )
 
 func printUsage() {
@@ -17,13 +15,14 @@ func printUsage() {
 	os.Exit(1)
 }
 
-const ResultsFile = "found_passwords"
+const resultsFile = "found_passwords"
 
+// Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {
 	runtime.GOMAXPROCS(1)
 	// NOTE: https://markhneedham.com/blog/2017/01/31/go-multi-threaded-writing-csv-file/
 	// Create results CSV
-	file, err := os.Create(ResultsFile + ".csv")
+	file, err := os.Create(resultsFile + ".csv")
 	checkError("Cannot create file", err)
 	headers := [][]string{{"plaintext", "ciphertext", "hashing_algorithm"}}
 	csv.NewWriter(file).WriteAll(headers)
@@ -55,52 +54,10 @@ func main() {
 	if *dictionary != "nil" && *dictionaries != "nil" {
 		panic("Only one type of dictionary can be used!")
 	}
-
-	var foundPasswords []string
 	// Handle combintation of single dictionary file and either a single hash or a hash file
-	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
-		if *hash != "nil" {
-			lowerCaseHash := strings.ToLower(*hash)
-			passwords := readAndSplitFile(dictionary)
-			checkPassword(passwords, &foundPasswords, lowerCaseHash)
-		}
-
-		if *hashes != "nil" {
-			hashedPasswords := readAndSplitFile(hashes)
-			for _, password := range hashedPasswords {
-				lowerCaseHash := strings.ToLower(password)
-				passwords := readAndSplitFile(dictionary)
-				checkPassword(passwords, &foundPasswords, lowerCaseHash)
-			}
-
-		}
-	}
+	attackUsingSingleDictionary(dictionary, hash, hashes)
 	// Handle combintation of a directory of dictionaries
-	if *dictionaries != "nil" && (*hash != "nil" || *hashes != "nil") {
-		passwordDicts, err := ioutil.ReadDir(*dictionaries)
-		checkError("Could not read directory: ", err)
-
-		for _, dict := range passwordDicts {
-			fileName := dict.Name()
-			filePath := *dictionaries + "/" + fileName
-			passwords := readAndSplitFile(&filePath)
-			if *hash != "nil" {
-				lowerCaseHash := strings.ToLower(*hash)
-				checkPassword(passwords, &foundPasswords, lowerCaseHash)
-			}
-
-			if *hashes != "nil" {
-				hashedPasswords := readAndSplitFile(hashes)
-				for _, password := range hashedPasswords {
-					lowerCaseHash := strings.ToLower(password)
-					if err != nil {
-						fmt.Println(err)
-					}
-					checkPassword(passwords, &foundPasswords, lowerCaseHash)
-				}
-			}
-		}
-	}
+	attackWithMultipleDictionaries(dictionaries, hash, hashes)
 
 	os.Exit(0)
 }

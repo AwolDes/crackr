@@ -17,7 +17,7 @@ Crackr - A CLI to crack hashes using a dictionary attack
 
 ### Crack multiple passwords against multiple dictionaries
 
-`crackr -hf hashes.txt -f dicitonaries`
+`crackr -hf hashes.txt -d dicitonaries`
 
 
 
