@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"runtime"
 	"strings"
@@ -79,9 +78,7 @@ func main() {
 	// Handle combintation of a directory of dictionaries
 	if *dictionaries != "nil" && (*hash != "nil" || *hashes != "nil") {
 		passwordDicts, err := ioutil.ReadDir(*dictionaries)
-		if err != nil {
-			log.Fatal(err)
-		}
+		checkError("Could not read directory: ", err)
 
 		for _, dict := range passwordDicts {
 			fileName := dict.Name()

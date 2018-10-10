@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"fmt"
 	"hash"
 	"io/ioutil"
 	"log"
@@ -11,9 +10,7 @@ import (
 
 func readAndSplitFile(file *string) []string {
 	fileBytes, err := ioutil.ReadFile(*file)
-	if err != nil {
-		fmt.Println(err)
-	}
+	checkError("Could not split file: ", err)
 	fileString := string(fileBytes)
 	stringArray := strings.Split(fileString, "\n")
 	return stringArray
