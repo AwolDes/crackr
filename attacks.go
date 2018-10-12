@@ -20,17 +20,18 @@ func chunkPasswordDictionary(dictionary *string) [][]string {
 	given password dictionary chunk
 */
 func checkPasswords(dictionaryChunk []string, foundPasswords []string, hashedPasswords []string) {
-	var wg sync.WaitGroup
-	foundPasswordsChannel := make(chan []string)
+	// var wg sync.WaitGroup
+	// foundPasswordsChannel := make(chan []string, 1)
+	// defer close(foundPasswordsChannel)
 	for _, password := range hashedPasswords {
-		wg.Add(1)
-		go func(dictionaryChunk []string, foundPasswords []string, password string, foundPasswordsChannel chan []string) {
-			defer wg.Done()
-			lowerCasePassword := strings.ToLower(password)
-			checkPassword(dictionaryChunk, &foundPasswords, lowerCasePassword, foundPasswordsChannel)
-		}(dictionaryChunk, foundPasswords, password, foundPasswordsChannel)
+		lowerCasePassword := strings.ToLower(password)
+		checkPassword(dictionaryChunk, &foundPasswords, lowerCasePassword)
+		// wg.Add(1)
+		// go func(dictionaryChunk []string, foundPasswords []string, password string) {
+		// 	defer wg.Done()
+		// }(dictionaryChunk, foundPasswords, password)
 	}
-	wg.Done()
+	// wg.Wait()
 }
 
 /*
@@ -46,7 +47,9 @@ func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []str
 			checkPasswords(passwordChunk, foundPasswords, hashedPasswords)
 		}(passwordChunk, foundPasswords)
 	}
+	// Does not sync - race condition?
 	wg.Wait()
+
 }
 
 /*
