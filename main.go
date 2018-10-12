@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
@@ -17,16 +16,14 @@ func printUsage() {
 
 const resultsFile = "found_passwords"
 
+var csvWriter = newThreadSafeCsvWriter()
+
 // Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {
 	runtime.GOMAXPROCS(1)
-	// NOTE: https://markhneedham.com/blog/2017/01/31/go-multi-threaded-writing-csv-file/
-	// Create results CSV
-	file, err := os.Create(resultsFile + ".csv")
-	checkError("Cannot create file", err)
-	headers := [][]string{{"plaintext", "ciphertext", "hashing_algorithm"}}
-	csv.NewWriter(file).WriteAll(headers)
-	file.Close()
+
+	headers := []string{"plaintext", "ciphertext", "hashing_algorithm"}
+	csvWriter.writeChanges(headers)
 
 	hash := flag.String("h", "nil", "This is the hash of the password")
 	hashes := flag.String("hf", "nil", "This is a file that contains multiple hashes to crack")
@@ -58,6 +55,6 @@ func main() {
 	attackUsingSingleDictionary(dictionary, hash, hashes)
 	// Handle combintation of a directory of dictionaries
 	attackWithMultipleDictionaries(dictionaries, hash, hashes)
-
+	csvWriter.flush()
 	os.Exit(0)
 }

@@ -21,13 +21,14 @@ func chunkPasswordDictionary(dictionary *string) [][]string {
 */
 func checkPasswords(dictionaryChunk []string, foundPasswords []string, hashedPasswords []string) {
 	var wg sync.WaitGroup
+	foundPasswordsChannel := make(chan []string)
 	for _, password := range hashedPasswords {
 		wg.Add(1)
-		go func(dictionaryChunk []string, foundPasswords []string, password string) {
+		go func(dictionaryChunk []string, foundPasswords []string, password string, foundPasswordsChannel chan []string) {
 			defer wg.Done()
 			lowerCasePassword := strings.ToLower(password)
-			checkPassword(dictionaryChunk, &foundPasswords, lowerCasePassword)
-		}(dictionaryChunk, foundPasswords, password)
+			checkPassword(dictionaryChunk, &foundPasswords, lowerCasePassword, foundPasswordsChannel)
+		}(dictionaryChunk, foundPasswords, password, foundPasswordsChannel)
 	}
 	wg.Done()
 }
@@ -56,8 +57,8 @@ func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *strin
 	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
 		if *hash != "nil" {
 			lowerCaseHash := strings.ToLower(*hash)
-			passwords := readAndSplitFile(dictionary)
-			checkPassword(passwords, &foundPasswords, lowerCaseHash)
+			chunkedDictionary := chunkPasswordDictionary(dictionary)
+			searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash}, foundPasswords)
 		}
 
 		if *hashes != "nil" {
@@ -81,10 +82,10 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 		for _, dictionary := range passwordDicts {
 			fileName := dictionary.Name()
 			filePath := *dictionaries + "/" + fileName
-			passwordDictionary := readAndSplitFile(&filePath)
 			if *hash != "nil" {
 				lowerCaseHash := strings.ToLower(*hash)
-				checkPassword(passwordDictionary, &foundPasswords, lowerCaseHash)
+				chunkedDictionary := chunkPasswordDictionary(&filePath)
+				searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash}, foundPasswords)
 			}
 
 			if *hashes != "nil" {

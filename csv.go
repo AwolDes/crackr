@@ -15,7 +15,7 @@ type ThreadSafeCsvWriter struct {
 }
 
 func newThreadSafeCsvWriter() ThreadSafeCsvWriter {
-	f, err := os.OpenFile(resultsFile+".csv", os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	f, err := os.Create(resultsFile + ".csv")
 	checkError("Couldn't save changes: ", err)
 	w := csv.NewWriter(f)
 	return ThreadSafeCsvWriter{
@@ -28,8 +28,7 @@ func newThreadSafeCsvWriter() ThreadSafeCsvWriter {
 func (w *ThreadSafeCsvWriter) writeChanges(data []string) {
 	w.mutex.Lock()
 	w.writer.Write(data)
-	w.writer.Flush()
-	w.file.Close()
+	w.mutex.Unlock()
 }
 
 func (w *ThreadSafeCsvWriter) flush() {

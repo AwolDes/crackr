@@ -36,16 +36,16 @@ func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 /*
 	If a password is found, write it to the CSV to be analysed later.
 */
-func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string) {
-	w := newThreadSafeCsvWriter()
-	w.writeChanges([]string{password, hashedPassword, hashAlgorithim})
+func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string, foundPasswordsChannel chan []string) {
+	csvWriter.writeChanges([]string{password, hashedPassword, hashAlgorithim})
 	*foundPasswords = append(*foundPasswords, hashedPassword)
+	foundPasswordsChannel <- *foundPasswords
 }
 
 /*
 	For each hash algorithm, hash each password and see if any match the given hash
 */
-func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
+func checkPassword(passwords []string, foundPasswords *[]string, hash string, foundPasswordsChannel chan []string) {
 	// for each hash algorithm, check all passwords
 	hashAlgorithims := []string{"sha1", "md5", "sha256", "sha512", "sha3_256", "sha3_512"}
 	for _, hashAlgorithim := range hashAlgorithims {
@@ -53,7 +53,7 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 			hashedPassword := getHash(hashAlgorithim, password)
 			if !checkFoundPasswords(foundPasswords, hashedPassword) {
 				if hashedPassword == hash {
-					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
+					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords, foundPasswordsChannel)
 				}
 			}
 		}
