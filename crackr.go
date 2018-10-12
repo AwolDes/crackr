@@ -37,7 +37,8 @@ func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 	If a password is found, write it to the CSV to be analysed later.
 */
 func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string) {
-	writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
+	w := newThreadSafeCsvWriter()
+	w.writeChanges([]string{password, hashedPassword, hashAlgorithim})
 	*foundPasswords = append(*foundPasswords, hashedPassword)
 }
 

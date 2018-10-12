@@ -77,6 +77,7 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 		passwordDicts, err := ioutil.ReadDir(*dictionaries)
 		checkError("Could not read directory: ", err)
 
+		// Interesting, paralellising this loop decreases performance
 		for _, dictionary := range passwordDicts {
 			fileName := dictionary.Name()
 			filePath := *dictionaries + "/" + fileName
