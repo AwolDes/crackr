@@ -1,10 +1,39 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
 )
+
+func chunkPasswordDictionary(dictionary *string) [][]string {
+	passwords := readAndSplitFile(dictionary)
+	return chunkArray(passwords, 4)
+}
+
+func checkPasswords(passwordChunk []string, foundPasswords []string, hashedPasswords []string) {
+	var wg sync.WaitGroup
+	for _, password := range hashedPasswords {
+		wg.Add(1)
+		go func(passwordChunk []string, foundPasswords []string, password string) {
+			defer wg.Done()
+			lowerCasePassword := strings.ToLower(password)
+			checkPassword(passwordChunk, &foundPasswords, lowerCasePassword)
+		}(passwordChunk, foundPasswords, password)
+	}
+}
+
+func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []string, foundPasswords []string) {
+	var wg sync.WaitGroup
+	for _, passwordChunk := range chunkedDictionary {
+		wg.Add(1)
+		go func(passwordChunk []string, foundPasswords []string) {
+			defer wg.Done()
+			checkPasswords(passwordChunk, foundPasswords, hashedPasswords)
+		}(passwordChunk, foundPasswords)
+	}
+	wg.Wait()
+}
 
 func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *string) {
 	var foundPasswords []string
@@ -17,12 +46,8 @@ func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *strin
 
 		if *hashes != "nil" {
 			hashedPasswords := readAndSplitFile(hashes)
-			for _, password := range hashedPasswords {
-				lowerCaseHash := strings.ToLower(password)
-				passwords := readAndSplitFile(dictionary)
-				checkPassword(passwords, &foundPasswords, lowerCaseHash)
-			}
-
+			chunkedDictionary := chunkPasswordDictionary(dictionary)
+			searchChunkedDictionary(chunkedDictionary, hashedPasswords, foundPasswords)
 		}
 	}
 }
@@ -33,24 +58,19 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 		passwordDicts, err := ioutil.ReadDir(*dictionaries)
 		checkError("Could not read directory: ", err)
 
-		for _, dict := range passwordDicts {
-			fileName := dict.Name()
+		for _, dictionary := range passwordDicts {
+			fileName := dictionary.Name()
 			filePath := *dictionaries + "/" + fileName
-			passwords := readAndSplitFile(&filePath)
+			passwordDictionary := readAndSplitFile(&filePath)
 			if *hash != "nil" {
 				lowerCaseHash := strings.ToLower(*hash)
-				checkPassword(passwords, &foundPasswords, lowerCaseHash)
+				checkPassword(passwordDictionary, &foundPasswords, lowerCaseHash)
 			}
 
 			if *hashes != "nil" {
 				hashedPasswords := readAndSplitFile(hashes)
-				for _, password := range hashedPasswords {
-					lowerCaseHash := strings.ToLower(password)
-					if err != nil {
-						fmt.Println(err)
-					}
-					checkPassword(passwords, &foundPasswords, lowerCaseHash)
-				}
+				chunkedDictionary := chunkPasswordDictionary(&filePath)
+				searchChunkedDictionary(chunkedDictionary, hashedPasswords, foundPasswords)
 			}
 		}
 	}
