@@ -20,7 +20,7 @@ var csvWriter = newThreadSafeCsvWriter()
 
 // Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {
-	runtime.GOMAXPROCS(1)
+	runtime.GOMAXPROCS(4)
 
 	headers := []string{"plaintext", "ciphertext", "hashing_algorithm"}
 	csvWriter.writeChanges(headers)

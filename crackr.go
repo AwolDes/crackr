@@ -24,7 +24,8 @@ func getHash(hashType string, plaintext string) string {
 /*
 	Check if a password has already been found
 */
-func checkFoundPasswords(foundPasswords *PasswordsFound, hashedPassword string) bool {
+func checkFoundPasswords(foundPasswords PasswordsFound, hashedPassword string) bool {
+	// this is only thread safe when foundPasswords is copied, and not a pointer
 	for _, foundPassword := range foundPasswords.passwords {
 		if foundPassword == hashedPassword {
 			return true
@@ -49,7 +50,7 @@ func checkPassword(passwords []string, hash string, foundPasswords *PasswordsFou
 	for _, hashAlgorithim := range hashAlgorithmOptions {
 		for _, password := range passwords {
 			hashedPassword := getHash(hashAlgorithim, password)
-			if !checkFoundPasswords(foundPasswords, hashedPassword) {
+			if !checkFoundPasswords(*foundPasswords, hashedPassword) {
 				if hashedPassword == hash {
 					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
 					// fmt.Println(foundPasswords.passwords)
