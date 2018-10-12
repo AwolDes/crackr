@@ -62,7 +62,7 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 					if hashedPassword == hash {
 						fmt.Println("Matched!")
 						fmt.Println(password, hashAlgorithim)
-						writeCSV(ResultsFile, []string{password, hashedPassword, hashAlgorithim})
+						writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 						*foundPasswords = append(*foundPasswords, hashedPassword)
 					}
 				}
@@ -70,7 +70,7 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 				if hashedPassword == hash {
 					fmt.Println("Match!")
 					fmt.Println(password, hashAlgorithim)
-					writeCSV(ResultsFile, []string{password, hashedPassword, hashAlgorithim})
+					writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 					*foundPasswords = append(*foundPasswords, hashedPassword)
 				}
 			}
