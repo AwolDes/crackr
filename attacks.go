@@ -19,35 +19,36 @@ func chunkPasswordDictionary(dictionary *string) [][]string {
 	This function starts a goroutine for each password, and checks if that password is in the
 	given password dictionary chunk
 */
-func checkPasswords(dictionaryChunk []string, foundPasswords []string, hashedPasswords []string) {
-	// var wg sync.WaitGroup
-	// foundPasswordsChannel := make(chan []string, 1)
-	// defer close(foundPasswordsChannel)
+func checkPasswords(dictionaryChunk []string, hashedPasswords []string, foundPasswords *PasswordsFound) {
+	var wg sync.WaitGroup
 	for _, password := range hashedPasswords {
-		lowerCasePassword := strings.ToLower(password)
-		checkPassword(dictionaryChunk, &foundPasswords, lowerCasePassword)
-		// wg.Add(1)
-		// go func(dictionaryChunk []string, foundPasswords []string, password string) {
-		// 	defer wg.Done()
-		// }(dictionaryChunk, foundPasswords, password)
+		wg.Add(1)
+		go func(dictionaryChunk []string, password string, foundPasswords *PasswordsFound) {
+			defer wg.Done()
+			lowerCasePassword := strings.ToLower(password)
+			checkPassword(dictionaryChunk, lowerCasePassword, foundPasswords)
+		}(dictionaryChunk, password, foundPasswords)
 	}
-	// wg.Wait()
+	wg.Wait()
 }
 
 /*
 	This function starts a goroutine for all dictionary chunks, and then calls
 	checkPasswords to see if any passwords are in any dictionary chunks
 */
-func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []string, foundPasswords []string) {
+func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []string) {
 	var wg sync.WaitGroup
+	foundPasswords := PasswordsFound{
+		mutex:     &sync.Mutex{},
+		passwords: []string{},
+	}
 	for _, passwordChunk := range chunkedDictionary {
 		wg.Add(1)
-		go func(passwordChunk []string, foundPasswords []string) {
+		go func(passwordChunk []string, hashedPasswords []string, foundPasswords *PasswordsFound) {
 			defer wg.Done()
-			checkPasswords(passwordChunk, foundPasswords, hashedPasswords)
-		}(passwordChunk, foundPasswords)
+			checkPasswords(passwordChunk, hashedPasswords, foundPasswords)
+		}(passwordChunk, hashedPasswords, &foundPasswords)
 	}
-	// Does not sync - race condition?
 	wg.Wait()
 
 }
@@ -56,18 +57,17 @@ func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []str
 	This function handles logic for a dictionary that is just a single file
 */
 func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *string) {
-	var foundPasswords []string
 	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
 		if *hash != "nil" {
 			lowerCaseHash := strings.ToLower(*hash)
 			chunkedDictionary := chunkPasswordDictionary(dictionary)
-			searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash}, foundPasswords)
+			searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash})
 		}
 
 		if *hashes != "nil" {
 			hashedPasswords := readAndSplitFile(hashes)
 			chunkedDictionary := chunkPasswordDictionary(dictionary)
-			searchChunkedDictionary(chunkedDictionary, hashedPasswords, foundPasswords)
+			searchChunkedDictionary(chunkedDictionary, hashedPasswords)
 		}
 	}
 }
@@ -76,7 +76,6 @@ func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *strin
 	This function handles logic for a directory of dictionaries
 */
 func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *string) {
-	var foundPasswords []string
 	if *dictionaries != "nil" && (*hash != "nil" || *hashes != "nil") {
 		passwordDicts, err := ioutil.ReadDir(*dictionaries)
 		checkError("Could not read directory: ", err)
@@ -88,13 +87,13 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 			if *hash != "nil" {
 				lowerCaseHash := strings.ToLower(*hash)
 				chunkedDictionary := chunkPasswordDictionary(&filePath)
-				searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash}, foundPasswords)
+				searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash})
 			}
 
 			if *hashes != "nil" {
 				hashedPasswords := readAndSplitFile(hashes)
 				chunkedDictionary := chunkPasswordDictionary(&filePath)
-				searchChunkedDictionary(chunkedDictionary, hashedPasswords, foundPasswords)
+				searchChunkedDictionary(chunkedDictionary, hashedPasswords)
 			}
 		}
 	}

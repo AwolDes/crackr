@@ -4,7 +4,19 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+	"sync"
 )
+
+type PasswordsFound struct {
+	mutex     *sync.Mutex
+	passwords []string
+}
+
+func (pf *PasswordsFound) appendPassword(newPassword string) {
+	pf.mutex.Lock()
+	pf.passwords = append(pf.passwords, newPassword)
+	pf.mutex.Unlock()
+}
 
 /*
 	Given an array, this function will split it into the specified

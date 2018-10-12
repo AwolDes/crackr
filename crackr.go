@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 var hashAlgorithmFuncs = map[string]func(string) string{
 	"sha1":     sha1Hash,
 	"md5":      md5Hash,
@@ -13,25 +9,23 @@ var hashAlgorithmFuncs = map[string]func(string) string{
 	"sha3_512": sha3_512Hash,
 }
 
-var hashAlgorithimOptions = []string{"sha1", "md5", "sha256", "sha512", "sha3_256", "sha3_512"}
+var hashAlgorithmOptions = []string{"sha1", "md5", "sha256", "sha512", "sha3_256", "sha3_512"}
 
 /*
-	Gets a hash for a given string and hash algorithm
+	Returns the hashed version of the plaintext
 */
 func getHash(hashType string, plaintext string) string {
 	// note: a map function is faster than a switch
 	// source: https://hashrocket.com/blog/posts/switch-vs-map-which-is-the-better-way-to-branch-in-go
-	for _, hashAlgorithm := range hashAlgorithmFuncs {
-		return hashAlgorithm(plaintext)
-	}
-	panic("Hash type not supported!")
+	hashAlgorithm := hashAlgorithmFuncs[hashType]
+	return hashAlgorithm(plaintext)
 }
 
 /*
 	Check if a password has already been found
 */
-func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
-	for _, foundPassword := range *foundPasswords {
+func checkFoundPasswords(foundPasswords *PasswordsFound, hashedPassword string) bool {
+	for _, foundPassword := range foundPasswords.passwords {
 		if foundPassword == hashedPassword {
 			return true
 		}
@@ -42,23 +36,23 @@ func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 /*
 	If a password is found, write it to the CSV to be analysed later.
 */
-func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string) {
+func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *PasswordsFound) {
 	csvWriter.writeChanges([]string{password, hashedPassword, hashAlgorithim})
-	*foundPasswords = append(*foundPasswords, hashedPassword)
+	foundPasswords.appendPassword(hashedPassword)
 }
 
 /*
 	For each hash algorithm, hash each password and see if any match the given hash
 */
-func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
+func checkPassword(passwords []string, hash string, foundPasswords *PasswordsFound) {
 	// for each hash algorithm, check all passwords
-	for _, hashAlgorithim := range hashAlgorithimOptions {
+	for _, hashAlgorithim := range hashAlgorithmOptions {
 		for _, password := range passwords {
 			hashedPassword := getHash(hashAlgorithim, password)
 			if !checkFoundPasswords(foundPasswords, hashedPassword) {
 				if hashedPassword == hash {
-					fmt.Println(password, hashAlgorithim, hash)
 					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
+					// fmt.Println(foundPasswords.passwords)
 				}
 			}
 		}
