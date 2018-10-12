@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/hex"
-	"hash"
 	"io/ioutil"
 	"log"
 	"strings"
 )
 
-var numCPU = 4
-
+/*
+	Given an array, this function will split it into the specified
+	amount of chunks
+*/
 func chunkArray(array []string, chunks int) [][]string {
 	arrayLength := len(array)
 	chunkSize := (arrayLength + 1) / chunks
@@ -26,6 +26,9 @@ func chunkArray(array []string, chunks int) [][]string {
 	return chunkedArray
 }
 
+/*
+	Splits a file into an array
+*/
 func readAndSplitFile(file *string) []string {
 	fileBytes, err := ioutil.ReadFile(*file)
 	checkError("Could not split file: ", err)
@@ -34,12 +37,9 @@ func readAndSplitFile(file *string) []string {
 	return stringArray
 }
 
-func hashText(hasher hash.Hash, plaintext string) string {
-	hasher.Write([]byte(plaintext))
-	cipherText := hex.EncodeToString(hasher.Sum(nil))
-	return cipherText
-}
-
+/*
+	Generic error handling as go requires explicit handling of errors
+*/
 func checkError(message string, err error) {
 	if err != nil {
 		log.Fatal(message, err)

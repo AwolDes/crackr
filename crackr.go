@@ -9,6 +9,9 @@ var hashAlgorithms = map[string]func(string) string{
 	"sha3_512": sha3_512Hash,
 }
 
+/*
+	Gets a hash for a given string and hash algorithm
+*/
 func getHash(hashType string, plaintext string) string {
 	// note: a map function is faster than a switch
 	// source: https://hashrocket.com/blog/posts/switch-vs-map-which-is-the-better-way-to-branch-in-go
@@ -18,6 +21,9 @@ func getHash(hashType string, plaintext string) string {
 	panic("Hash type not supported!")
 }
 
+/*
+	Check if a password has already been found
+*/
 func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 	for _, foundPassword := range *foundPasswords {
 		if foundPassword == hashedPassword {
@@ -27,12 +33,17 @@ func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 	return false
 }
 
+/*
+	If a password is found, write it to the CSV to be analysed later.
+*/
 func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string) {
-	// fmt.Printf("Matched password (%s): %s, %s\n", hashAlgorithim, password, hashedPassword)
 	writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 	*foundPasswords = append(*foundPasswords, hashedPassword)
 }
 
+/*
+	For each hash algorithm, hash each password and see if any match the given hash
+*/
 func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 	// for each hash algorithm, check all passwords
 	hashAlgorithims := []string{"sha1", "md5", "sha256", "sha512", "sha3_256", "sha3_512"}

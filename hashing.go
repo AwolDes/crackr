@@ -5,9 +5,17 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/hex"
+	"hash"
 
 	"golang.org/x/crypto/sha3"
 )
+
+func hashText(hasher hash.Hash, plaintext string) string {
+	hasher.Write([]byte(plaintext))
+	cipherText := hex.EncodeToString(hasher.Sum(nil))
+	return cipherText
+}
 
 func sha1Hash(plaintext string) string {
 	hasher := sha1.New()
