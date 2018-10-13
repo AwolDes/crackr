@@ -19,7 +19,7 @@ const resultsFile = "found_passwords"
 
 // Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {
-	runtime.GOMAXPROCS(1)
+	runtime.GOMAXPROCS(8)
 	// NOTE: https://markhneedham.com/blog/2017/01/31/go-multi-threaded-writing-csv-file/
 	// Create results CSV
 	file, err := os.Create(resultsFile + ".csv")
