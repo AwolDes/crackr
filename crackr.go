@@ -50,11 +50,8 @@ func checkPassword(passwords []string, hash string, foundPasswords *PasswordsFou
 	for _, hashAlgorithim := range hashAlgorithmOptions {
 		for _, password := range passwords {
 			hashedPassword := getHash(hashAlgorithim, password)
-			if !checkFoundPasswords(*foundPasswords, hashedPassword) {
-				if hashedPassword == hash {
-					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
-					// fmt.Println(foundPasswords.passwords)
-				}
+			if hashedPassword == hash && !checkFoundPasswords(*foundPasswords, hashedPassword) {
+				foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
 			}
 		}
 	}
