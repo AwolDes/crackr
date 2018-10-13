@@ -28,7 +28,6 @@ func checkFoundPasswords(foundPasswords *[]string, hashedPassword string) bool {
 }
 
 func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *[]string) {
-	// fmt.Printf("Matched password (%s): %s, %s\n", hashAlgorithim, password, hashedPassword)
 	writeCSV(resultsFile, []string{password, hashedPassword, hashAlgorithim})
 	*foundPasswords = append(*foundPasswords, hashedPassword)
 }
@@ -38,10 +37,8 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 	for _, hashAlgorithim := range hashAlgorithmOptions {
 		for _, password := range passwords {
 			hashedPassword := getHash(hashAlgorithim, password)
-			if hashedPassword == hash {
-				if !checkFoundPasswords(foundPasswords, hashedPassword) {
-					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
-				}
+			if hashedPassword == hash && !checkFoundPasswords(foundPasswords, hashedPassword) {
+				foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
 			}
 		}
 	}
