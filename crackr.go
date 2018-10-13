@@ -38,8 +38,8 @@ func checkPassword(passwords []string, foundPasswords *[]string, hash string) {
 	for _, hashAlgorithim := range hashAlgorithmOptions {
 		for _, password := range passwords {
 			hashedPassword := getHash(hashAlgorithim, password)
-			if !checkFoundPasswords(foundPasswords, hashedPassword) {
-				if hashedPassword == hash {
+			if hashedPassword == hash {
+				if !checkFoundPasswords(foundPasswords, hashedPassword) {
 					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
 				}
 			}
