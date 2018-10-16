@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 var hashAlgorithmFuncs = map[string]func(string) string{
 	"sha1":     sha1Hash,
 	"md5":      md5Hash,
@@ -47,12 +49,18 @@ func foundPassword(password string, hashedPassword string, hashAlgorithim string
 */
 func checkPassword(passwords []string, hash string, foundPasswords *PasswordsFound) {
 	// for each hash algorithm, check all passwords
+	var wg sync.WaitGroup
 	for _, hashAlgorithim := range hashAlgorithmOptions {
-		for _, password := range passwords {
-			hashedPassword := getHash(hashAlgorithim, password)
-			if hashedPassword == hash && !checkFoundPasswords(*foundPasswords, hashedPassword) {
-				foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
+		wg.Add(1)
+		go func(hashAlgorithim string, passwords []string, hash string, foundPasswords *PasswordsFound) {
+			defer wg.Done()
+			for _, password := range passwords {
+				hashedPassword := getHash(hashAlgorithim, password)
+				if hashedPassword == hash && !checkFoundPasswords(*foundPasswords, hashedPassword) {
+					foundPassword(password, hashedPassword, hashAlgorithim, foundPasswords)
+				}
 			}
-		}
+		}(hashAlgorithim, passwords, hash, foundPasswords)
 	}
+	wg.Wait()
 }
