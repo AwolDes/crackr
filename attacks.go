@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"strings"
 	"sync"
 )
@@ -81,20 +82,26 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 		checkError("Could not read directory: ", err)
 
 		// Interesting, paralellising this loop decreases performance
+		var wg sync.WaitGroup
 		for _, dictionary := range passwordDicts {
-			fileName := dictionary.Name()
-			filePath := *dictionaries + "/" + fileName
-			if *hash != "nil" {
-				lowerCaseHash := strings.ToLower(*hash)
-				chunkedDictionary := chunkPasswordDictionary(&filePath)
-				searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash})
-			}
+			wg.Add(1)
+			go func(dictionary os.FileInfo) {
+				defer wg.Done()
+				fileName := dictionary.Name()
+				filePath := *dictionaries + "/" + fileName
+				if *hash != "nil" {
+					lowerCaseHash := strings.ToLower(*hash)
+					chunkedDictionary := chunkPasswordDictionary(&filePath)
+					searchChunkedDictionary(chunkedDictionary, []string{lowerCaseHash})
+				}
 
-			if *hashes != "nil" {
-				hashedPasswords := readAndSplitFile(hashes)
-				chunkedDictionary := chunkPasswordDictionary(&filePath)
-				searchChunkedDictionary(chunkedDictionary, hashedPasswords)
-			}
+				if *hashes != "nil" {
+					hashedPasswords := readAndSplitFile(hashes)
+					chunkedDictionary := chunkPasswordDictionary(&filePath)
+					searchChunkedDictionary(chunkedDictionary, hashedPasswords)
+				}
+			}(dictionary)
 		}
+		wg.Wait()
 	}
 }
