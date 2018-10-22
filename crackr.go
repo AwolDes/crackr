@@ -37,7 +37,7 @@ func checkPassword(passwords []string, hash string) {
 			defer wg.Done()
 			for _, password := range passwords {
 				hashedPassword := getHash(hashAlgorithim, password)
-				if hashedPassword == hash && foundPasswords.appendPassword(hashedPassword) == false {
+				if hashedPassword == hash && !foundPasswords.appendPassword(hashedPassword) {
 					csvWriter.writeChanges([]string{password, hashedPassword, hashAlgorithim})
 				}
 			}
