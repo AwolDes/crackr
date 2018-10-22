@@ -17,8 +17,8 @@ func (pf *PasswordsFound) appendPassword(newPassword string) bool {
 	found := false
 	for _, foundPassword := range pf.passwords {
 		if foundPassword == newPassword {
-			found = true
-			break
+			pf.mutex.Unlock()
+			return true
 		}
 	}
 	if found == false {
@@ -26,10 +26,7 @@ func (pf *PasswordsFound) appendPassword(newPassword string) bool {
 		pf.mutex.Unlock()
 		return false
 	}
-	pf.mutex.Unlock()
-	return true
-	// pf.mutex.Unlock()
-	// panic("Error appending password")
+	panic("Did not appened password")
 }
 
 /*

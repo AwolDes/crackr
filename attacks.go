@@ -55,8 +55,6 @@ func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []str
 */
 func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *string) {
 	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
-
-		// foundPasswordsChan := make(chan PasswordsFound)
 		if *hash != "nil" {
 			lowerCaseHash := strings.ToLower(*hash)
 			chunkedDictionary := chunkPasswordDictionary(dictionary)

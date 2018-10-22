@@ -26,27 +26,6 @@ func getHash(hashType string, plaintext string) string {
 }
 
 /*
-	Check if a password has already been found
-*/
-func checkFoundPasswords(foundPasswords *PasswordsFound, hashedPassword string) bool {
-	// this is only thread safe when foundPasswords is copied, and not a pointer
-	// for _, foundPassword := range foundPasswords.passwords {
-	// 	if foundPassword == hashedPassword {
-	// 		return true
-	// 	}
-	// }
-	foundPasswords.appendPassword(hashedPassword)
-	return false
-}
-
-/*
-	If a password is found, write it to the CSV to be analysed later.
-*/
-func foundPassword(password string, hashedPassword string, hashAlgorithim string, foundPasswords *PasswordsFound) {
-	csvWriter.writeChanges([]string{password, hashedPassword, hashAlgorithim})
-}
-
-/*
 	For each hash algorithm, hash each password and see if any match the given hash
 */
 func checkPassword(passwords []string, hash string) {
