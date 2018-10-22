@@ -12,10 +12,24 @@ type PasswordsFound struct {
 	passwords []string
 }
 
-func (pf *PasswordsFound) appendPassword(newPassword string) {
+func (pf *PasswordsFound) appendPassword(newPassword string) bool {
 	pf.mutex.Lock()
-	pf.passwords = append(pf.passwords, newPassword)
+	found := false
+	for _, foundPassword := range pf.passwords {
+		if foundPassword == newPassword {
+			found = true
+			break
+		}
+	}
+	if found == false {
+		pf.passwords = append(pf.passwords, newPassword)
+		pf.mutex.Unlock()
+		return false
+	}
 	pf.mutex.Unlock()
+	return true
+	// pf.mutex.Unlock()
+	// panic("Error appending password")
 }
 
 /*

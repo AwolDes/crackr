@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 )
 
 func printUsage() {
@@ -17,6 +18,11 @@ func printUsage() {
 const resultsFile = "found_passwords"
 
 var csvWriter = newThreadSafeCsvWriter()
+
+var foundPasswords = PasswordsFound{
+	mutex:     &sync.Mutex{},
+	passwords: []string{},
+}
 
 // Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {

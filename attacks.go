@@ -20,15 +20,15 @@ func chunkPasswordDictionary(dictionary *string) [][]string {
 	This function starts a goroutine for each password, and checks if that password is in the
 	given password dictionary chunk
 */
-func checkPasswords(dictionaryChunk []string, hashedPasswords []string, foundPasswords *PasswordsFound) {
+func checkPasswords(dictionaryChunk []string, hashedPasswords []string) {
 	var wg sync.WaitGroup
 	for _, password := range hashedPasswords {
 		wg.Add(1)
-		go func(dictionaryChunk []string, password string, foundPasswords *PasswordsFound) {
+		go func(dictionaryChunk []string, password string) {
 			defer wg.Done()
 			lowerCasePassword := strings.ToLower(password)
-			checkPassword(dictionaryChunk, lowerCasePassword, foundPasswords)
-		}(dictionaryChunk, password, foundPasswords)
+			checkPassword(dictionaryChunk, lowerCasePassword)
+		}(dictionaryChunk, password)
 	}
 	wg.Wait()
 }
@@ -39,16 +39,12 @@ func checkPasswords(dictionaryChunk []string, hashedPasswords []string, foundPas
 */
 func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []string) {
 	var wg sync.WaitGroup
-	foundPasswords := PasswordsFound{
-		mutex:     &sync.Mutex{},
-		passwords: []string{},
-	}
 	for _, passwordChunk := range chunkedDictionary {
 		wg.Add(1)
-		go func(passwordChunk []string, hashedPasswords []string, foundPasswords *PasswordsFound) {
+		go func(passwordChunk []string, hashedPasswords []string) {
 			defer wg.Done()
-			checkPasswords(passwordChunk, hashedPasswords, foundPasswords)
-		}(passwordChunk, hashedPasswords, &foundPasswords)
+			checkPasswords(passwordChunk, hashedPasswords)
+		}(passwordChunk, hashedPasswords)
 	}
 	wg.Wait()
 
@@ -59,6 +55,8 @@ func searchChunkedDictionary(chunkedDictionary [][]string, hashedPasswords []str
 */
 func attackUsingSingleDictionary(dictionary *string, hash *string, hashes *string) {
 	if *dictionary != "nil" && (*hash != "nil" || *hashes != "nil") {
+
+		// foundPasswordsChan := make(chan PasswordsFound)
 		if *hash != "nil" {
 			lowerCaseHash := strings.ToLower(*hash)
 			chunkedDictionary := chunkPasswordDictionary(dictionary)
@@ -81,7 +79,6 @@ func attackWithMultipleDictionaries(dictionaries *string, hash *string, hashes *
 		passwordDicts, err := ioutil.ReadDir(*dictionaries)
 		checkError("Could not read directory: ", err)
 
-		// Interesting, paralellising this loop decreases performance
 		var wg sync.WaitGroup
 		for _, dictionary := range passwordDicts {
 			wg.Add(1)
