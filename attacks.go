@@ -13,7 +13,7 @@ import (
 */
 func chunkPasswordDictionary(dictionary *string) [][]string {
 	passwords := readAndSplitFile(dictionary)
-	return chunkArray(passwords, 4)
+	return chunkArray(passwords, 8)
 }
 
 /*
