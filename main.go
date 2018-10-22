@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"sync"
 )
 
@@ -25,7 +26,7 @@ var foundPasswords = PasswordsFound{
 
 // Performance tools & methods https://github.com/golang/go/wiki/Performance
 func main() {
-	// runtime.GOMAXPROCS(8)
+	runtime.GOMAXPROCS(8)
 
 	headers := []string{"plaintext", "ciphertext", "hashing_algorithm"}
 	csvWriter.writeChanges(headers)
